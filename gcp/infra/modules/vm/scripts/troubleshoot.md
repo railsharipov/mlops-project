@@ -38,5 +38,5 @@ gcloud compute instances get-serial-port-output vm-a \
 
 ### Test the new/fixed startup script without restarting VM instance
 ```sh
-sudo google_metadata_script_runner --script-type startup
+sudo google_metadata_script_runner startup
 ```

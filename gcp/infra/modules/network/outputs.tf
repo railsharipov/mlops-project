@@ -1,7 +1,7 @@
-output "subnet_a_id" {
-  value = google_compute_subnetwork.subnet_a.id
+output "subnet_id" {
+  value = google_compute_subnetwork.this.id
 }
 
-output "subnet_a_region" {
-  value = google_compute_subnetwork.subnet_a.region
+output "subnet_region" {
+  value = google_compute_subnetwork.this.region
 }

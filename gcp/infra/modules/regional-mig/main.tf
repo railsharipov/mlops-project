@@ -1,5 +1,9 @@
+locals {
+  name_prefix = trimspace(coalesce(var.name_prefix, ""))
+}
+
 resource "google_compute_instance_template" "this" {
-  name_prefix  = "${var.name}-"
+  name_prefix  = var.name_prefix
   machine_type = var.machine_type
 
   disk {
@@ -16,9 +20,7 @@ resource "google_compute_instance_template" "this" {
     # No access_config: instances receive no public IPv4 address.
   }
 
-  labels = {
-    managed_by = "opentofu"
-  }
+  labels = var.common_labels
 
   lifecycle {
     create_before_destroy = true
@@ -26,9 +28,9 @@ resource "google_compute_instance_template" "this" {
 }
 
 resource "google_compute_region_instance_group_manager" "this" {
-  name               = "${var.name}-mig"
+  name               = join("-", compact([local.name_prefix, "mig"]))
   region             = var.region
-  base_instance_name = var.name
+  base_instance_name = join("-", compact([local.name_prefix, "mig"]))
   target_size        = var.target_size
 
   version {
