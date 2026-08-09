@@ -51,9 +51,15 @@ Tailscale provides network connectivity between tailnet devices, so the client c
 ```sh
 curl http://${TAILNET_IP}/8080
 ```
-The service must listen on the Tailscale interface or all interfaces:
+The service must listen on the Tailscale interface or all interfaces. For example, to run Jupyter Lab server listening on tailnet IP:
 ```sh
-0.0.0.0:8080
+TS_IP="$(tailscale ip -4)"
+
+jupyter lab \
+  --no-browser \
+  --ip="$TS_IP" \
+  --port=8888 \
+  --ServerApp.allow_remote_access=True
 ```
 If service listens only on localhost other tailnet devices cannot reach it directly.
 
@@ -73,3 +79,24 @@ You can also use Tailscale Serve as a raw TCP forwarder:
 sudo tailscale serve --tcp=9000 tcp://127.0.0.1:9000
 ```
 Tailscale documents this for raw TCP services such as SSH, RDP, and other TCP-based protocols.
+
+## Pre-installed tools on a VM instance
+The deployed GCP VM instance installs following on startup:
++ Anaconda
++ Docker packages
++ `curl`, `jq`
++ Tailscale server
+
+## Setup Anaconda
+Login to VM and init conda:
+```sh
+/opt/anaconda3/bin/conda init
+```
+Re-login to shell to activate based conda environment:
+```sh
+exec bash
+```
+You should now have conda in your PATH:
+```sh
+conda --version
+```
