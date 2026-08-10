@@ -11,7 +11,7 @@ resource "google_compute_instance_template" "this" {
     auto_delete  = true
     boot         = true
 
-    disk_type = "pd-balanced"
+    disk_type    = "pd-balanced"
     disk_size_gb = 30
   }
 

@@ -22,7 +22,7 @@ resource "google_compute_instance" "this" {
   boot_disk {
     initialize_params {
       image = "projects/ubuntu-os-cloud/global/images/ubuntu-2204-jammy-v20260731"
-      size = 30
+      size  = 30
     }
   }
 
@@ -30,7 +30,7 @@ resource "google_compute_instance" "this" {
     subnetwork = var.subnet_id
 
     access_config {
-      # Ephemeral public IPv4
+      # ephemeral public ip
     }
   }
 
@@ -42,12 +42,12 @@ resource "google_compute_instance" "this" {
   metadata = {
     "ssh-keys" = var.ssh_key_metadata
     "startup-script" = templatefile("${path.module}/scripts/startup.sh.tftpl", {
-      project_id = var.project_id
+      project_id          = var.project_id
       tailscale_secret_id = var.tailscale_secret_id
     })
   }
 
-  tags = var.tags
+  tags   = var.tags
   labels = var.common_labels
 
   depends_on = [

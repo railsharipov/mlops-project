@@ -1,33 +1,33 @@
 variable "name_prefix" {
-  type = string
-  default = ""
+  type     = string
+  default  = ""
   nullable = false
 }
 
 variable "common_labels" {
-  type = map(string)
-  default = {}
+  type     = map(string)
+  default  = {}
   nullable = false
 }
 
 variable "region" {
-  type = string
+  type     = string
   nullable = false
 }
 
 variable "subnetwork" {
-  type = string
+  type     = string
   nullable = false
 }
 
 variable "target_size" {
-  type    = number
-  default = 1
+  type     = number
+  default  = 1
   nullable = false
 }
 
 variable "machine_type" {
-  type    = string
-  default = "e2-micro"
+  type     = string
+  default  = "e2-micro"
   nullable = false
 }
