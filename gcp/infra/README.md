@@ -35,7 +35,7 @@ terraform init
 terraform plan
 terraform apply
 ```
-+ Wait for VM instance to finish all the installations
++ Wait for VM instance to finish all the installations (few minutes)
 + Check your Tailscale client UI whether VM instance is now part of the tailnet
 + Copy tailnet IP for VM instance
 
@@ -53,11 +53,9 @@ curl http://${TAILNET_IP}/8080
 ```
 The service must listen on the Tailscale interface or all interfaces. For example, to run Jupyter Lab server listening on tailnet IP:
 ```sh
-TS_IP="$(tailscale ip -4)"
-
 jupyter lab \
   --no-browser \
-  --ip="$TS_IP" \
+  --ip="$(tailscale ip -4)" \
   --port=8888 \
   --ServerApp.allow_remote_access=True
 ```
