@@ -65,11 +65,13 @@ ANACONDA_PREFIX="/opt/anaconda3"
 if [[ -x "$${ANACONDA_PREFIX}/bin/conda" ]]; then
   echo "Anaconda already installed at $${ANACONDA_PREFIX}; skipping installation."
 else
+    mkdir "$${ANACONDA_PREFIX}"
+    chmod 755 "$${ANACONDA_PREFIX}"
     curl -fL "$${ANACONDA_URL}" -o "/tmp/$${ANACONDA_INSTALLER}"
 
     bash "/tmp/$${ANACONDA_INSTALLER}" \
-    -bfu \
-    -p $${ANACONDA_PREFIX}
+        -b \
+        -p $${ANACONDA_PREFIX}
 
     rm -f "/tmp/$${ANACONDA_INSTALLER}"
 
