@@ -19,3 +19,17 @@ xgboost
 ```sh
 pip install -r requirements.txt
 ```
+
+### Run MLFlow web UI:
+Listen on localhost and use sqlite for backend store:
+```sh
+mlflow ui \
+    --host 127.0.0.1 \
+    --backend-store-uri sqlite:///mlflow.db
+```
+Listen on Tailscale IP:
+```sh
+mlflow ui \
+    --host $(tailscale ip -4) \
+    --backend-store-uri sqlite:///mlflow.db
+```
