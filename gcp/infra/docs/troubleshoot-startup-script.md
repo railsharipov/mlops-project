@@ -31,7 +31,7 @@ sudo journalctl -u google-guest-agent.service \
 
 ### Use serial-port output from your local machine
 ```sh
-gcloud compute instances get-serial-port-output vm-a \
+gcloud compute instances get-serial-port-output mlops-vm \
   --zone=us-central1-a \
   --port=1
 ```
