@@ -17,7 +17,7 @@ resource "google_secret_manager_secret_iam_member" "tailscale_secret_accessor" {
 resource "google_compute_instance" "this" {
   name         = join("-", compact([local.name_prefix, "vm"]))
   machine_type = var.machine_type
-  zone = "${var.subnet_region}-a"
+  zone         = var.zone
 
   boot_disk {
     initialize_params {

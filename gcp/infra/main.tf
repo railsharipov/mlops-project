@@ -9,6 +9,9 @@ data "http" "my_public_ip" {
 locals {
   name_prefix = "mlops"
 
+  region = "us-east1"
+  zone = "us-east1-b"
+
   ssh_user = local.name_prefix
   ssh_admin_tag = "ssh-admin"
 
@@ -30,6 +33,7 @@ data "google_secret_manager_secret" "tailscale_auth_key" {
 module "net" {
   source = "./modules/network"
   name_prefix = local.name_prefix
+  region = local.region
   ssh_allow_ingress_cidr = local.my_public_cidr
   ssh_allow_ingress_tag = local.ssh_admin_tag
   common_labels = local.common_labels
@@ -39,6 +43,7 @@ module "vm" {
   source = "./modules/vm"
   project_id = var.project_id
   name_prefix = local.name_prefix
+  zone = local.zone
   machine_type = "e2-standard-4"
   subnet_id = module.net.subnet_id
   subnet_region = module.net.subnet_region

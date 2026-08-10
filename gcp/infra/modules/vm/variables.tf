@@ -9,6 +9,11 @@ variable "name_prefix" {
   nullable = false
 }
 
+variable "zone" {
+  type = string
+  nullable = false
+}
+
 variable "common_labels" {
   type = map(string)
   default = {}

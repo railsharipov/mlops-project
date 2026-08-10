@@ -9,7 +9,7 @@ resource "google_compute_network" "this" {
 
 resource "google_compute_subnetwork" "this" {
   name          = join("-", compact([local.name_prefix, "subnet"]))
-  region        = "us-central1"
+  region        = var.region
   network       = google_compute_network.this.id
   ip_cidr_range = "10.10.0.0/24"
 }
