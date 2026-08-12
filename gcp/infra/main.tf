@@ -52,3 +52,15 @@ module "vm" {
   tags                = [local.ssh_admin_tag]
   common_labels       = local.common_labels
 }
+
+module "postgres" {
+  source           = "./modules/postgres"
+  name_prefix      = local.name_prefix
+  region           = local.region
+  network_id       = module.net.network_id
+  common_labels    = local.common_labels
+  database_name    = local.name_prefix
+  username         = local.name_prefix
+  password         = var.db_password
+  password_version = var.db_password_version
+}

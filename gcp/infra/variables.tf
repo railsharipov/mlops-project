@@ -20,3 +20,14 @@ variable "tailscale_secret_id" {
   type     = string
   nullable = false
 }
+
+variable "db_password" {
+  type      = string
+  sensitive = true
+  nullable  = false
+}
+
+variable "db_password_version" {
+  type     = number
+  nullable = false
+}
