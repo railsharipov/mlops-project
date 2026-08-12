@@ -64,3 +64,11 @@ module "postgres" {
   password         = var.db_password
   password_version = var.db_password_version
 }
+
+module "bucket" {
+  source      = "./modules/bucket"
+  name_prefix = local.name_prefix
+  project_id  = var.project_id
+  region      = local.region
+  common_labels = local.common_labels
+}
