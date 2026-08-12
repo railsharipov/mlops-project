@@ -33,3 +33,9 @@ mlflow ui \
     --host $(tailscale ip -4) \
     --backend-store-uri sqlite:///mlflow.db
 ```
+Use PostgreSQL as backend store:
+```sh
+mlflow ui \
+    --host $(tailscale ip -4) \
+    --backend-store-uri "postgresql+psycopg2://mlops@<POSTGRES_IP>:5432/mlflow"
+```
