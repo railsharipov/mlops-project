@@ -1,6 +1,6 @@
-output "bucket_id" {
-  value       = google_storage_bucket.this.id
-  description = "The ID of the bucket."
+output "bucket_name" {
+  value       = google_storage_bucket.this.name
+  description = "The name of the bucket."
 }
 
 output "bucket_url" {
