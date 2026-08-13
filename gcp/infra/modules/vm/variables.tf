@@ -57,9 +57,16 @@ variable "jupyter_token_secret_id" {
   description = "Secret Manager secret ID for the JupyterLab authentication token."
 }
 
-variable "ssh_key_metadata" {
-  type     = string
-  nullable = false
+variable "ssh_user" {
+  type        = string
+  nullable    = false
+  description = "SSH username; also used as the Linux user running the systemd services."
+}
+
+variable "ssh_public_key" {
+  type        = string
+  nullable    = false
+  description = "SSH public key content (without trailing newline)."
 }
 
 variable "tags" {

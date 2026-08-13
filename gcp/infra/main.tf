@@ -42,22 +42,23 @@ module "private_dns" {
 }
 
 module "vm" {
-  source              = "./modules/vm"
-  project_id          = var.project_id
-  name_prefix         = local.name_prefix
-  zone                = local.zone
-  machine_type        = "e2-standard-4"
-  subnet_id           = module.net.subnet_id
-  subnet_region       = module.net.subnet_region
-  bucket_name         = module.bucket.bucket_name
-  tailscale_secret_id = var.tailscale_auth_key_secret_id
+  source                  = "./modules/vm"
+  project_id              = var.project_id
+  name_prefix             = local.name_prefix
+  zone                    = local.zone
+  machine_type            = "e2-standard-4"
+  subnet_id               = module.net.subnet_id
+  subnet_region           = module.net.subnet_region
+  bucket_name             = module.bucket.bucket_name
+  tailscale_secret_id     = var.tailscale_auth_key_secret_id
   jupyter_token_secret_id = var.jupyter_token_secret_id
-  pgpassword_secret_id = var.pgpassword_secret_id
-  ssh_key_metadata    = "${local.ssh_user}:${file(var.ssh_pubkey_file)}"
-  tags                = [local.ssh_admin_tag]
-  common_labels       = local.common_labels
-  private_dns_zone_name  = module.private_dns.zone_name
-  private_dns_name       = module.private_dns.dns_name
+  pgpassword_secret_id    = var.pgpassword_secret_id
+  ssh_user                = local.ssh_user
+  ssh_public_key          = trimspace(file(var.ssh_pubkey_file))
+  tags                    = [local.ssh_admin_tag]
+  common_labels           = local.common_labels
+  private_dns_zone_name   = module.private_dns.zone_name
+  private_dns_name        = module.private_dns.dns_name
 }
 
 module "postgres" {
@@ -71,7 +72,7 @@ module "postgres" {
   database_name          = local.name_prefix
   username               = local.name_prefix
   pgpassword_secret_id   = var.pgpassword_secret_id
-  pgpassword_secret_version = 1
+  pgpassword_secret_version = 2
   private_dns_zone_name  = module.private_dns.zone_name
   private_dns_name       = module.private_dns.dns_name
 }

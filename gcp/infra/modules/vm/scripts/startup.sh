@@ -22,6 +22,11 @@ TS_SECRET_ID="$(
     -H "Metadata-Flavor: Google" \
     "${META_URL}/instance/attributes/tailscale-secret-id"
 )"
+SERVICE_USER="$(
+  curl -fsS \
+    -H "Metadata-Flavor: Google" \
+    "${META_URL}/instance/attributes/service-user"
+)"
 
 # Tailscale installation
 if command -v tailscale > /dev/null 2>&1; then
@@ -57,12 +62,24 @@ tailscale up --auth-key="file:${TS_AUTH_FILE}"
 
 rm -f "${TS_AUTH_FILE}"
 unset TAILSCALE_AUTH_KEY TOKEN
+umask 022  # restore default
+
+# Tailscale serve — expose services over Tailscale HTTPS
+tailscale serve --bg --https=8888 http://127.0.0.1:8888  # JupyterLab
+tailscale serve --bg --https=5000 http://127.0.0.1:5000  # MLflow
 
 
 apt-get update
 apt-get install -y ca-certificates curl jq
 
-# Anaconda installation
+# Service user
+if id "${SERVICE_USER}" &>/dev/null; then
+  echo "User '${SERVICE_USER}' already exists; skipping creation."
+else
+  useradd --create-home --shell /bin/bash "${SERVICE_USER}"
+fi
+
+# Anaconda installation (runs as service user to ensure correct ownership)
 ANACONDA_INSTALLER="Anaconda3-2026.07-1-Linux-x86_64.sh"
 ANACONDA_URL="https://repo.anaconda.com/archive/${ANACONDA_INSTALLER}"
 ANACONDA_PREFIX="/opt/anaconda3"
@@ -72,15 +89,32 @@ if [[ -x "${ANACONDA_PREFIX}/bin/conda" ]]; then
 else
     # Remove any partial install so the installer starts from a clean slate.
     rm -rf "${ANACONDA_PREFIX}"
+    # Pre-create the prefix dir owned by the service user; /opt is root-owned
+    # so the installer (running as service user) cannot create it directly.
+    install -d -o "${SERVICE_USER}" -g "${SERVICE_USER}" "${ANACONDA_PREFIX}"
     curl -fL "${ANACONDA_URL}" -o "/tmp/${ANACONDA_INSTALLER}"
 
-    bash "/tmp/${ANACONDA_INSTALLER}" \
-        -b \
+    sudo -u "${SERVICE_USER}" bash "/tmp/${ANACONDA_INSTALLER}" \
+        -bu \
         -p "${ANACONDA_PREFIX}"
 
     rm -f "/tmp/${ANACONDA_INSTALLER}"
 
     "${ANACONDA_PREFIX}/bin/conda" --version
+fi
+
+# Initialise conda for the service user's shell (idempotent)
+sudo -u "${SERVICE_USER}" "${ANACONDA_PREFIX}/bin/conda" init bash
+
+# MLflow installation (runs as service user)
+if [[ -x "${ANACONDA_PREFIX}/bin/mlflow" ]]; then
+  echo "MLflow already installed; skipping installation."
+else
+  sudo -u "${SERVICE_USER}" "${ANACONDA_PREFIX}/bin/pip" install --quiet \
+    mlflow \
+    psycopg2-binary \
+    google-cloud-storage
+  "${ANACONDA_PREFIX}/bin/mlflow" --version
 fi
 
 # Docker installation
@@ -122,6 +156,9 @@ fi
 systemctl enable --now docker
 docker --version
 docker compose version
+
+# Add service user to the docker group now that Docker is installed
+usermod -aG docker "${SERVICE_USER}"
 
 # ---------------------------------------------------------------------------
 # MLFlow service
@@ -166,12 +203,12 @@ PGPASSWORD="$(
   | base64 --decode
 )"
 
-install -m 0600 /dev/null /run/mlflow.env
-printf 'PGPASSWORD=%s\nGCP_BUCKET=%s\n' "${PGPASSWORD}" "${GCP_BUCKET}" > /run/mlflow.env
+install -m 0600 /dev/null /run/mlflow/env
+printf 'PGPASSWORD=%s\nGCS_ARTIFACT_ROOT=gs://%s\n' "${PGPASSWORD}" "${GCP_BUCKET}" > /run/mlflow/env
 HELPER_EOF
-chmod 0700 /usr/local/bin/mlflow-fetch-env.sh
+chmod 0755 /usr/local/bin/mlflow-fetch-env.sh
 
-cat > /etc/systemd/system/mlflow.service << 'SERVICE_EOF'
+cat > /etc/systemd/system/mlflow.service << SERVICE_EOF
 [Unit]
 Description=MLflow Tracking Server
 After=network-online.target
@@ -179,14 +216,17 @@ Wants=network-online.target
 
 [Service]
 Type=simple
-User=root
+User=${SERVICE_USER}
+RuntimeDirectory=mlflow
 ExecStartPre=/usr/local/bin/mlflow-fetch-env.sh
-EnvironmentFile=/run/mlflow.env
-ExecStart=/opt/anaconda3/bin/mlflow server \
-    --host 127.0.0.1 \
-    --port 5000 \
-    --backend-store-uri "postgresql+psycopg2://mlops@postgres.internal.mlops.net:5432/mlops" \
-    --default-artifact-root "gs://$GCP_BUCKET"
+EnvironmentFile=-/run/mlflow/env
+ExecStart=/opt/anaconda3/bin/mlflow server \\
+    --host 127.0.0.1 \\
+    --port 5000 \\
+    --allowed-hosts '*.ts.net:5000' \\
+    --backend-store-uri "postgresql+psycopg2://mlops@postgres.internal.mlops.net:5432/mlops" \\
+    --default-artifact-root \\
+    \$GCS_ARTIFACT_ROOT
 Restart=on-failure
 RestartSec=10
 
@@ -232,12 +272,12 @@ JUPYTER_TOKEN="$(
   | base64 --decode
 )"
 
-install -m 0600 /dev/null /run/jupyterlab.env
-printf 'JUPYTER_TOKEN=%s\n' "${JUPYTER_TOKEN}" > /run/jupyterlab.env
+install -m 0600 /dev/null /run/jupyterlab/env
+printf 'JUPYTER_TOKEN=%s\n' "${JUPYTER_TOKEN}" > /run/jupyterlab/env
 HELPER_EOF
-chmod 0700 /usr/local/bin/jupyterlab-fetch-env.sh
+chmod 0755 /usr/local/bin/jupyterlab-fetch-env.sh
 
-cat > /etc/systemd/system/jupyterlab.service << 'SERVICE_EOF'
+cat > /etc/systemd/system/jupyterlab.service << SERVICE_EOF
 [Unit]
 Description=JupyterLab Server
 After=network-online.target
@@ -245,16 +285,17 @@ Wants=network-online.target
 
 [Service]
 Type=simple
-User=root
+User=${SERVICE_USER}
+WorkingDirectory=/home/${SERVICE_USER}
+RuntimeDirectory=jupyterlab
 Environment=PATH=/opt/anaconda3/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin
 ExecStartPre=/usr/local/bin/jupyterlab-fetch-env.sh
-EnvironmentFile=/run/jupyterlab.env
-ExecStart=/opt/anaconda3/bin/jupyter lab \
-    --no-browser \
-    --ip=127.0.0.1 \
-    --port=8888 \
-    --ServerApp.allow_remote_access=True \
-    --ServerApp.token=$JUPYTER_TOKEN
+EnvironmentFile=-/run/jupyterlab/env
+ExecStart=/opt/anaconda3/bin/jupyter lab \\
+    --no-browser \\
+    --ip=127.0.0.1 \\
+    --port=8888 \\
+    --ServerApp.allow_remote_access=True
 Restart=on-failure
 RestartSec=10
 

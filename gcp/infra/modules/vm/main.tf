@@ -60,11 +60,12 @@ resource "google_compute_instance" "this" {
   }
 
   metadata = {
-    "ssh-keys"                 = var.ssh_key_metadata
+    "ssh-keys"                 = "${var.ssh_user}:${var.ssh_public_key}"
     "tailscale-secret-id"      = var.tailscale_secret_id
     "gcp-bucket"               = var.bucket_name
     "pg-secret-id"             = var.pgpassword_secret_id
     "jupyter-token-secret-id"  = var.jupyter_token_secret_id
+    "service-user"             = var.ssh_user
     "startup-script"           = file("${path.module}/scripts/startup.sh")
   }
 
