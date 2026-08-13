@@ -37,5 +37,12 @@ Use PostgreSQL as backend store:
 ```sh
 mlflow ui \
     --host $(tailscale ip -4) \
-    --backend-store-uri "postgresql+psycopg2://mlops@<POSTGRES_IP>:5432/mlflow"
+    --backend-store-uri "postgresql+psycopg2://mlops@postgres.internal.mlops.net:5432/mlops"
+```
+Use PostgreSQL as backend store and GCP bucket as artifact store:
+```sh
+mlflow ui \
+    --host $(tailscale ip -4) \
+    --backend-store-uri "postgresql+psycopg2://mlops@postgres.internal.mlops.net:5432/mlops" \
+    --default-artifact-root "gs://<GCP_BUCKET>"
 ```
