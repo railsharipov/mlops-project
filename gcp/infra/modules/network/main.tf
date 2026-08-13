@@ -20,3 +20,15 @@ resource "google_compute_subnetwork" "psc_endpoint_range" {
   network       = google_compute_network.this.id
   ip_cidr_range = "10.20.0.0/28"
 }
+
+resource "google_compute_firewall" "this" {
+  name    = "test-firewall"
+  network = google_compute_network.this.name
+
+  allow {
+    protocol = "tcp"
+    ports    = ["22"]
+  }
+
+  target_tags = [var.ssh_allow_ingress_tag]
+}

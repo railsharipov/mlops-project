@@ -23,11 +23,6 @@ locals {
   }
 }
 
-data "google_secret_manager_secret" "tailscale_auth_key" {
-  project   = var.project_id
-  secret_id = var.tailscale_secret_id
-}
-
 module "net" {
   source                 = "./modules/network"
   name_prefix            = local.name_prefix
@@ -55,7 +50,9 @@ module "vm" {
   subnet_id           = module.net.subnet_id
   subnet_region       = module.net.subnet_region
   bucket_name         = module.bucket.bucket_name
-  tailscale_secret_id = data.google_secret_manager_secret.tailscale_auth_key.secret_id
+  tailscale_secret_id = var.tailscale_auth_key_secret_id
+  jupyter_token_secret_id = var.jupyter_token_secret_id
+  pgpassword_secret_id = var.pgpassword_secret_id
   ssh_key_metadata    = "${local.ssh_user}:${file(var.ssh_pubkey_file)}"
   tags                = [local.ssh_admin_tag]
   common_labels       = local.common_labels
@@ -73,8 +70,8 @@ module "postgres" {
   common_labels          = local.common_labels
   database_name          = local.name_prefix
   username               = local.name_prefix
-  password               = var.db_password
-  password_version       = var.db_password_version
+  pgpassword_secret_id   = var.pgpassword_secret_id
+  pgpassword_secret_version = 1
   private_dns_zone_name  = module.private_dns.zone_name
   private_dns_name       = module.private_dns.dns_name
 }

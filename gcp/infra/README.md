@@ -28,6 +28,24 @@ echo -n $TAILSCALE_AUTH_KEY | gcloud secrets create tailscale-auth-key \
   --data-file=-
 ```
 
+## Create Postgres DB password
+```sh
+echo -n $POSTGRES_PASSWORD | gcloud secrets create postgres-password \
+  --project="$PROJECT_ID" \
+  --replication-policy="automatic" \
+  --labels="group=mlops" \
+  --data-file=-
+```
+
+## Create Jupyter token
+```sh
+echo -n $JUPYTER_TOKEN | gcloud secrets create jupyter-token \
+  --project="$PROJECT_ID" \
+  --replication-policy="automatic" \
+  --labels="group=mlops" \
+  --data-file=-
+```
+
 ### Deploy GCP infrastructure
 + Run Terraform commands:
 ```sh

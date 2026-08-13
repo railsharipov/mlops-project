@@ -9,6 +9,12 @@ locals {
   ])
 }
 
+data "google_secret_manager_secret_version" "pg_password" {
+  project = var.project_id
+  secret  = var.pgpassword_secret_id
+  version = tostring(var.pgpassword_secret_version)
+}
+
 resource "google_sql_database_instance" "this" {
   name                = join("-", compact([local.name_prefix, "postgres"]))
   database_version    = "POSTGRES_18"
@@ -50,8 +56,8 @@ resource "google_sql_database_instance" "this" {
 resource "google_sql_user" "this" {
   name                = var.username
   instance            = google_sql_database_instance.this.name
-  password_wo         = var.password
-  password_wo_version = var.password_version
+  password_wo         = data.google_secret_manager_secret_version.pg_password.secret_data
+  password_wo_version = data.google_secret_manager_secret_version.pg_password.version
 }
 
 resource "google_sql_database" "this" {

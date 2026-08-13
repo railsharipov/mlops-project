@@ -16,18 +16,20 @@ variable "ssh_pubkey_file" {
   nullable = false
 }
 
-variable "tailscale_secret_id" {
+variable "tailscale_auth_key_secret_id" {
   type     = string
+  default = "tailscale-auth-key"
   nullable = false
 }
 
-variable "db_password" {
-  type      = string
-  sensitive = true
-  nullable  = false
+variable "jupyter_token_secret_id" {
+  type     = string
+  default  = "jupyter-token"
+  nullable = false
 }
 
-variable "db_password_version" {
-  type     = number
+variable "pgpassword_secret_id" {
+  type     = string
+  default  = "postgres-password"
   nullable = false
 }

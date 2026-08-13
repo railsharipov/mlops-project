@@ -41,12 +41,12 @@ variable "username" {
   nullable = false
 }
 
-variable "password" {
+variable "pgpassword_secret_id" {
   type     = string
   nullable = false
 }
 
-variable "password_version" {
+variable "pgpassword_secret_version" {
   type     = number
   nullable = false
 }
