@@ -33,3 +33,8 @@ variable "pgpassword_secret_id" {
   default  = "postgres-password"
   nullable = false
 }
+
+variable "tailnet_domain" {
+  type     = string
+  nullable = false
+}

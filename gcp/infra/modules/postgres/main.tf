@@ -66,7 +66,7 @@ resource "google_sql_database" "this" {
 }
 
 resource "google_dns_record_set" "cname" {
-  name         = "postgres.${var.private_dns_name}"
+  name         = "postgres.${var.private_domain}."
   managed_zone = var.private_dns_zone_name
   type         = "CNAME"
 

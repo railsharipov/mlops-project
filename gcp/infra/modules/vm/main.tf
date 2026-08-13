@@ -66,7 +66,13 @@ resource "google_compute_instance" "this" {
     "pg-secret-id"             = var.pgpassword_secret_id
     "jupyter-token-secret-id"  = var.jupyter_token_secret_id
     "service-user"             = var.ssh_user
+    "private-domain"           = var.private_domain
+    "tailnet-domain"           = var.tailnet_domain
     "startup-script"           = file("${path.module}/scripts/startup.sh")
+    "mlflow-server-script"     = file("${path.module}/scripts/mlflow-server.sh")
+    "jupyterlab-server-script" = file("${path.module}/scripts/jupyterlab-server.sh")
+    "mlflow-unit"              = file("${path.module}/scripts/mlflow.service")
+    "jupyterlab-unit"          = file("${path.module}/scripts/jupyterlab.service")
   }
 
   tags   = var.tags
@@ -81,7 +87,7 @@ resource "google_compute_instance" "this" {
 }
 
 resource "google_dns_record_set" "a" {
-  name         = "mlops-vm.${var.private_dns_name}"
+  name         = "mlops-vm.${var.private_domain}."
   managed_zone = var.private_dns_zone_name
   type         = "A"
 

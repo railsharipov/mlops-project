@@ -12,21 +12,9 @@ export DEBIAN_FRONTEND=noninteractive
 
 META_URL="http://metadata.google.internal/computeMetadata/v1"
 
-PROJECT_ID="$(
-  curl -fsS \
-    -H "Metadata-Flavor: Google" \
-    "${META_URL}/project/project-id"
-)"
-TS_SECRET_ID="$(
-  curl -fsS \
-    -H "Metadata-Flavor: Google" \
-    "${META_URL}/instance/attributes/tailscale-secret-id"
-)"
-SERVICE_USER="$(
-  curl -fsS \
-    -H "Metadata-Flavor: Google" \
-    "${META_URL}/instance/attributes/service-user"
-)"
+PROJECT_ID="$(curl -fsS -H "Metadata-Flavor: Google" "${META_URL}/project/project-id")"
+TS_SECRET_ID="$(curl -fsS -H "Metadata-Flavor: Google" "${META_URL}/instance/attributes/tailscale-secret-id")"
+SERVICE_USER="$(curl -fsS -H "Metadata-Flavor: Google" "${META_URL}/instance/attributes/service-user")"
 
 # Tailscale installation
 if command -v tailscale > /dev/null 2>&1; then
@@ -39,16 +27,11 @@ else
 fi
 
 # Tailscale bootstrap
-TOKEN="$(
-  curl -fsS \
-    -H "Metadata-Flavor: Google" \
-    "${META_URL}/instance/service-accounts/default/token" \
-  | jq -r '.access_token'
-)"
+TOKEN="$(curl -fsS -H "Metadata-Flavor: Google" "${META_URL}/instance/service-accounts/default/token" \
+  | jq -r '.access_token')"
 
 TAILSCALE_AUTH_KEY="$(
-  curl -fsS \
-    -H "Authorization: Bearer ${TOKEN}" \
+  curl -fsS -H "Authorization: Bearer ${TOKEN}" \
     "https://secretmanager.googleapis.com/v1/projects/${PROJECT_ID}/secrets/${TS_SECRET_ID}/versions/latest:access" \
   | jq -r '.payload.data' \
   | base64 --decode
@@ -160,148 +143,35 @@ docker compose version
 # Add service user to the docker group now that Docker is installed
 usermod -aG docker "${SERVICE_USER}"
 
-# ---------------------------------------------------------------------------
 # MLFlow service
-# ---------------------------------------------------------------------------
+curl -fsS \
+  -H "Metadata-Flavor: Google" \
+  "${META_URL}/instance/attributes/mlflow-server-script" \
+  | install -m 0755 /dev/stdin /usr/local/bin/mlflow-server.sh
 
-# Helper script: fetches PGPASSWORD and GCP_BUCKET at every service start
-# and writes them to an EnvironmentFile consumed by mlflow.service.
-cat > /usr/local/bin/mlflow-fetch-env.sh << 'HELPER_EOF'
-#!/usr/bin/env bash
-set -Eeuo pipefail
+curl -fsS \
+  -H "Metadata-Flavor: Google" \
+  "${META_URL}/instance/attributes/mlflow-unit" \
+  | install -m 0644 /dev/stdin /etc/systemd/system/mlflow.service
 
-META_URL="http://metadata.google.internal/computeMetadata/v1"
+install -d /etc/systemd/system/mlflow.service.d
+printf '[Service]\nUser=%s\n' "${SERVICE_USER}" \
+  > /etc/systemd/system/mlflow.service.d/override.conf
 
-TOKEN="$(
-  curl -fsS \
-    -H "Metadata-Flavor: Google" \
-    "${META_URL}/instance/service-accounts/default/token" \
-  | jq -r '.access_token'
-)"
-
-PROJECT_ID="$(
-  curl -fsS \
-    -H "Metadata-Flavor: Google" \
-    "${META_URL}/project/project-id"
-)"
-GCP_BUCKET="$(
-  curl -fsS \
-    -H "Metadata-Flavor: Google" \
-    "${META_URL}/instance/attributes/gcp-bucket"
-)"
-PG_SECRET_ID="$(
-  curl -fsS \
-    -H "Metadata-Flavor: Google" \
-    "${META_URL}/instance/attributes/pg-secret-id"
-)"
-
-PGPASSWORD="$(
-  curl -fsS \
-    -H "Authorization: Bearer ${TOKEN}" \
-    "https://secretmanager.googleapis.com/v1/projects/${PROJECT_ID}/secrets/${PG_SECRET_ID}/versions/latest:access" \
-  | jq -r '.payload.data' \
-  | base64 --decode
-)"
-
-install -m 0600 /dev/null /run/mlflow/env
-printf 'PGPASSWORD=%s\nGCS_ARTIFACT_ROOT=gs://%s\n' "${PGPASSWORD}" "${GCP_BUCKET}" > /run/mlflow/env
-HELPER_EOF
-chmod 0755 /usr/local/bin/mlflow-fetch-env.sh
-
-cat > /etc/systemd/system/mlflow.service << SERVICE_EOF
-[Unit]
-Description=MLflow Tracking Server
-After=network-online.target
-Wants=network-online.target
-
-[Service]
-Type=simple
-User=${SERVICE_USER}
-RuntimeDirectory=mlflow
-ExecStartPre=/usr/local/bin/mlflow-fetch-env.sh
-EnvironmentFile=-/run/mlflow/env
-ExecStart=/opt/anaconda3/bin/mlflow server \\
-    --host 127.0.0.1 \\
-    --port 5000 \\
-    --allowed-hosts '*.ts.net:5000' \\
-    --backend-store-uri "postgresql+psycopg2://mlops@postgres.internal.mlops.net:5432/mlops" \\
-    --default-artifact-root \\
-    \$GCS_ARTIFACT_ROOT
-Restart=on-failure
-RestartSec=10
-
-[Install]
-WantedBy=multi-user.target
-SERVICE_EOF
-
-# ---------------------------------------------------------------------------
 # JupyterLab service
-# ---------------------------------------------------------------------------
+curl -fsS \
+  -H "Metadata-Flavor: Google" \
+  "${META_URL}/instance/attributes/jupyterlab-server-script" \
+  | install -m 0755 /dev/stdin /usr/local/bin/jupyterlab-server.sh
 
-# Helper script: fetches the Jupyter token at every service start and writes
-# it to an EnvironmentFile consumed by jupyterlab.service.
-cat > /usr/local/bin/jupyterlab-fetch-env.sh << 'HELPER_EOF'
-#!/usr/bin/env bash
-set -Eeuo pipefail
+curl -fsS \
+  -H "Metadata-Flavor: Google" \
+  "${META_URL}/instance/attributes/jupyterlab-unit" \
+  | install -m 0644 /dev/stdin /etc/systemd/system/jupyterlab.service
 
-META_URL="http://metadata.google.internal/computeMetadata/v1"
-
-TOKEN="$(
-  curl -fsS \
-    -H "Metadata-Flavor: Google" \
-    "${META_URL}/instance/service-accounts/default/token" \
-  | jq -r '.access_token'
-)"
-
-PROJECT_ID="$(
-  curl -fsS \
-    -H "Metadata-Flavor: Google" \
-    "${META_URL}/project/project-id"
-)"
-JUPYTER_TOKEN_SECRET_ID="$(
-  curl -fsS \
-    -H "Metadata-Flavor: Google" \
-    "${META_URL}/instance/attributes/jupyter-token-secret-id"
-)"
-
-JUPYTER_TOKEN="$(
-  curl -fsS \
-    -H "Authorization: Bearer ${TOKEN}" \
-    "https://secretmanager.googleapis.com/v1/projects/${PROJECT_ID}/secrets/${JUPYTER_TOKEN_SECRET_ID}/versions/latest:access" \
-  | jq -r '.payload.data' \
-  | base64 --decode
-)"
-
-install -m 0600 /dev/null /run/jupyterlab/env
-printf 'JUPYTER_TOKEN=%s\n' "${JUPYTER_TOKEN}" > /run/jupyterlab/env
-HELPER_EOF
-chmod 0755 /usr/local/bin/jupyterlab-fetch-env.sh
-
-cat > /etc/systemd/system/jupyterlab.service << SERVICE_EOF
-[Unit]
-Description=JupyterLab Server
-After=network-online.target
-Wants=network-online.target
-
-[Service]
-Type=simple
-User=${SERVICE_USER}
-WorkingDirectory=/home/${SERVICE_USER}
-RuntimeDirectory=jupyterlab
-Environment=PATH=/opt/anaconda3/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin
-ExecStartPre=/usr/local/bin/jupyterlab-fetch-env.sh
-EnvironmentFile=-/run/jupyterlab/env
-ExecStart=/opt/anaconda3/bin/jupyter lab \\
-    --no-browser \\
-    --ip=127.0.0.1 \\
-    --port=8888 \\
-    --ServerApp.allow_remote_access=True
-Restart=on-failure
-RestartSec=10
-
-[Install]
-WantedBy=multi-user.target
-SERVICE_EOF
+install -d /etc/systemd/system/jupyterlab.service.d
+printf '[Service]\nUser=%s\nWorkingDirectory=/home/%s\n' "${SERVICE_USER}" "${SERVICE_USER}" \
+  > /etc/systemd/system/jupyterlab.service.d/override.conf
 
 systemctl daemon-reload
 systemctl enable --now mlflow.service

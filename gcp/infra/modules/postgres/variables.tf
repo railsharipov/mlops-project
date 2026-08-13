@@ -51,7 +51,7 @@ variable "pgpassword_secret_version" {
   nullable = false
 }
 
-variable "private_dns_name" {
+variable "private_domain" {
   type     = string
   nullable = false
 }

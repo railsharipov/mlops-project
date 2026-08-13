@@ -75,7 +75,12 @@ variable "tags" {
   nullable = false
 }
 
-variable "private_dns_name" {
+variable "tailnet_domain" {
+  type     = string
+  nullable = false
+}
+
+variable "private_domain" {
   type     = string
   nullable = false
 }

@@ -57,8 +57,9 @@ module "vm" {
   ssh_public_key          = trimspace(file(var.ssh_pubkey_file))
   tags                    = [local.ssh_admin_tag]
   common_labels           = local.common_labels
+  tailnet_domain          = var.tailnet_domain
   private_dns_zone_name   = module.private_dns.zone_name
-  private_dns_name        = module.private_dns.dns_name
+  private_domain          = module.private_dns.domain
 }
 
 module "postgres" {
@@ -74,7 +75,7 @@ module "postgres" {
   pgpassword_secret_id   = var.pgpassword_secret_id
   pgpassword_secret_version = 2
   private_dns_zone_name  = module.private_dns.zone_name
-  private_dns_name       = module.private_dns.dns_name
+  private_domain       = module.private_dns.domain
 }
 
 module "bucket" {
