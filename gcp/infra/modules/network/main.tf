@@ -13,3 +13,10 @@ resource "google_compute_subnetwork" "this" {
   network       = google_compute_network.this.id
   ip_cidr_range = "10.10.0.0/24"
 }
+
+resource "google_compute_subnetwork" "psc_endpoint_range" {
+  name          = join("-", compact([local.name_prefix, "psc-endpoint-range"]))
+  region        = var.region
+  network       = google_compute_network.this.id
+  ip_cidr_range = "10.20.0.0/28"
+}

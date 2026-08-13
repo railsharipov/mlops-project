@@ -35,6 +35,11 @@ variable "subnet_region" {
   nullable = false
 }
 
+variable "bucket_name" {
+  type     = string
+  nullable = false
+}
+
 variable "tailscale_secret_id" {
   type     = string
   nullable = false
@@ -48,5 +53,15 @@ variable "ssh_key_metadata" {
 variable "tags" {
   type     = list(string)
   default  = []
+  nullable = false
+}
+
+variable "private_dns_name" {
+  type     = string
+  nullable = false
+}
+
+variable "private_dns_zone_name" {
+  type     = string
   nullable = false
 }

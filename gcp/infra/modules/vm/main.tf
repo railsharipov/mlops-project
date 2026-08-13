@@ -14,6 +14,12 @@ resource "google_secret_manager_secret_iam_member" "tailscale_secret_accessor" {
   member    = "serviceAccount:${google_service_account.this.email}"
 }
 
+resource "google_storage_bucket_iam_member" "workload_bucket_user" {
+  bucket = var.bucket_name
+  role   = "roles/storage.objectUser"
+  member = "serviceAccount:${google_service_account.this.email}"
+}
+
 resource "google_compute_instance" "this" {
   name         = join("-", compact([local.name_prefix, "vm"]))
   machine_type = var.machine_type
@@ -51,6 +57,17 @@ resource "google_compute_instance" "this" {
   labels = var.common_labels
 
   depends_on = [
-    google_secret_manager_secret_iam_member.tailscale_secret_accessor
+    google_secret_manager_secret_iam_member.tailscale_secret_accessor,
+    google_storage_bucket_iam_member.workload_bucket_user
+  ]
+}
+
+resource "google_dns_record_set" "a" {
+  name         = "mlops-vm.${var.private_dns_name}"
+  managed_zone = var.private_dns_zone_name
+  type         = "A"
+
+  rrdatas = [
+    google_compute_instance.this.network_interface.0.network_ip
   ]
 }

@@ -4,12 +4,23 @@ variable "name_prefix" {
   nullable = false
 }
 
+variable "project_id" {
+  type     = string
+  nullable = false
+}
+
 variable "region" {
   type     = string
   nullable = false
 }
 
 variable "network_id" {
+  type     = string
+  nullable = false
+}
+
+variable "pcs_endpoint_subnet_id" {
+  default  = "Subnet for Cloud SQL PSC endoints"
   type     = string
   nullable = false
 }
@@ -37,5 +48,15 @@ variable "password" {
 
 variable "password_version" {
   type     = number
+  nullable = false
+}
+
+variable "private_dns_name" {
+  type     = string
+  nullable = false
+}
+
+variable "private_dns_zone_name" {
+  type     = string
   nullable = false
 }
