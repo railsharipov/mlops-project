@@ -45,6 +45,18 @@ variable "tailscale_secret_id" {
   nullable = false
 }
 
+variable "pgpassword_secret_id" {
+  type        = string
+  nullable    = false
+  description = "Secret Manager secret ID for the PostgreSQL password used by MLflow."
+}
+
+variable "jupyter_token_secret_id" {
+  type        = string
+  nullable    = false
+  description = "Secret Manager secret ID for the JupyterLab authentication token."
+}
+
 variable "ssh_key_metadata" {
   type     = string
   nullable = false
