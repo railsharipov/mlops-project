@@ -27,5 +27,5 @@ jupyter lab --no-browser --ip="127.0.0.1" --port=8888 --ServerApp.allow_remote_a
 ```
 + Serve in tailnet:
 ```sh
-sudo tailscale serve --https=443 http://127.0.0.1:8888
+sudo tailscale serve --https=8888 http://127.0.0.1:8888
 ```

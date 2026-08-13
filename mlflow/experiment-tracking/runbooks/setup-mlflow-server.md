@@ -21,28 +21,20 @@ pip install -r requirements.txt
 ```
 
 ### Run MLFlow web UI:
-Listen on localhost and use sqlite for backend store:
++ Listen on localhost and use sqlite for backend store:
 ```sh
 mlflow ui \
     --host 127.0.0.1 \
     --backend-store-uri sqlite:///mlflow.db
 ```
-Listen on Tailscale IP:
++ OR use PostgreSQL as backend store and GCP bucket as artifact store:
 ```sh
 mlflow ui \
-    --host $(tailscale ip -4) \
-    --backend-store-uri sqlite:///mlflow.db
-```
-Use PostgreSQL as backend store:
-```sh
-mlflow ui \
-    --host $(tailscale ip -4) \
-    --backend-store-uri "postgresql+psycopg2://mlops@postgres.internal.mlops.net:5432/mlops"
-```
-Use PostgreSQL as backend store and GCP bucket as artifact store:
-```sh
-mlflow ui \
-    --host $(tailscale ip -4) \
+    --host 127.0.0.1 \
     --backend-store-uri "postgresql+psycopg2://mlops@postgres.internal.mlops.net:5432/mlops" \
     --default-artifact-root "gs://<GCP_BUCKET>"
+```
++ Serve in tailnet:
+```sh
+sudo tailscale serve --https=5000 http://127.0.0.1:5000
 ```
