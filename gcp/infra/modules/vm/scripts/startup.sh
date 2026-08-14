@@ -48,7 +48,7 @@ unset TAILSCALE_AUTH_KEY TOKEN
 umask 022  # restore default
 
 # Tailscale serve — expose services over Tailscale HTTPS
-tailscale serve --bg --https=8888 http://127.0.0.1:8888  # JupyterLab
+# tailscale serve --bg --https=8888 http://127.0.0.1:8888  # JupyterLab
 tailscale serve --bg --https=5000 http://127.0.0.1:5000  # MLflow
 
 
@@ -158,20 +158,20 @@ install -d /etc/systemd/system/mlflow.service.d
 printf '[Service]\nUser=%s\n' "${SERVICE_USER}" \
   > /etc/systemd/system/mlflow.service.d/override.conf
 
-# JupyterLab service
-curl -fsS \
-  -H "Metadata-Flavor: Google" \
-  "${META_URL}/instance/attributes/jupyterlab-server-script" \
-  | install -m 0755 /dev/stdin /usr/local/bin/jupyterlab-server.sh
+# # JupyterLab service
+# curl -fsS \
+#   -H "Metadata-Flavor: Google" \
+#   "${META_URL}/instance/attributes/jupyterlab-server-script" \
+#   | install -m 0755 /dev/stdin /usr/local/bin/jupyterlab-server.sh
 
-curl -fsS \
-  -H "Metadata-Flavor: Google" \
-  "${META_URL}/instance/attributes/jupyterlab-unit" \
-  | install -m 0644 /dev/stdin /etc/systemd/system/jupyterlab.service
+# curl -fsS \
+#   -H "Metadata-Flavor: Google" \
+#   "${META_URL}/instance/attributes/jupyterlab-unit" \
+#   | install -m 0644 /dev/stdin /etc/systemd/system/jupyterlab.service
 
-install -d /etc/systemd/system/jupyterlab.service.d
-printf '[Service]\nUser=%s\nWorkingDirectory=/home/%s\n' "${SERVICE_USER}" "${SERVICE_USER}" \
-  > /etc/systemd/system/jupyterlab.service.d/override.conf
+# install -d /etc/systemd/system/jupyterlab.service.d
+# printf '[Service]\nUser=%s\nWorkingDirectory=/home/%s\n' "${SERVICE_USER}" "${SERVICE_USER}" \
+#   > /etc/systemd/system/jupyterlab.service.d/override.conf
 
 systemctl daemon-reload
 systemctl enable --now mlflow.service
