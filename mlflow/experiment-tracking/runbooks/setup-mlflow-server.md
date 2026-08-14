@@ -1,5 +1,7 @@
 ## Setup MLFlow
 
+## Manual installation
+
 ### Prerequisites
 + Install Python3
 + Setup Python environment and activate it
@@ -33,8 +35,4 @@ mlflow ui \
     --host 127.0.0.1 \
     --backend-store-uri "postgresql+psycopg2://mlops@postgres.internal.mlops.net:5432/mlops" \
     --default-artifact-root "gs://<GCP_BUCKET>"
-```
-+ Serve in tailnet:
-```sh
-sudo tailscale serve --https=5000 http://127.0.0.1:5000
 ```
