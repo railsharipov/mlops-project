@@ -30,5 +30,5 @@ exec /opt/anaconda3/bin/mlflow server \
     --allowed-hosts "127.0.0.1:${PORT},localhost:${PORT},*.${TAILNET_DOMAIN}:${PORT}" \
     --port "${PORT}" \
     --backend-store-uri "postgresql+psycopg2://mlops@postgres.internal.mlops.net:5432/mlops" \
-    --default-artifact-root "gs://${GCP_BUCKET}" \
+    --artifacts-destination "gs://${GCP_BUCKET}" \
     --cors-allowed-origins "https://*.${TAILNET_DOMAIN}:${PORT},http://localhost:${PORT},http://127.0.0.1:${PORT}"
